@@ -80,8 +80,6 @@ main_label.pack()
 main_button = tk.Button(main_frame, text="OK" ,command=check_number)
 main_button.pack()
 
-root.mainloop()
-
 # --------------------------------------------------
 # P R O G R A M M A B L A U F
 # --------------------------------------------------
