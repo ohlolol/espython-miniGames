@@ -296,6 +296,3 @@ class pndIFGame:
     def run(self) ->str:
         self.Game.run()
         return "Game started"
-    def stop(self) ->str:
-        self.Game.stop()
-        return "Game Stopped"

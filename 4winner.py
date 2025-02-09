@@ -95,63 +95,17 @@ class TouchScreen:
         self.screen = Display(self.spi_display, dc=Pin(2), cs=Pin(15), rst=Pin(15), width=320, height=240, rotation=270)
         self.spi_touch = SPI(2, baudrate=1000000, sck=Pin(25), mosi=Pin(32), miso=Pin(39))
         self.touch = Touch(self.spi_touch, cs=Pin(33), int_pin=Pin(36), int_handler=self.touchscreen_press)
-        self.Touch_items = []
-        self.Touch_callbacks = []
-    class TouchArea:
-        ''' Bind callback to rectangular touch area'''
-        def __init__(self, parent, x, y, w, h, draw = False):
-            self.parent = parent
-            self.x = x
-            self.y = y
-            self.width = w
-            self.height = h
-            
-            self.TouchX = range(self.x, self.x + self.width)
-            self.TouchY = range(self.y, self.y + self.height)
-            
-            if draw is True:
-                self.draw()
         
-        ''' Draw the outline of the touch area '''
-        def draw(self):
-            self.color = color_rgb(70, 0, 0)
-            
-            for i in range(2):
-                self.parent.Screen.draw_rectangle(self.x+i, self.y+i,
-                                               self.width-2*i, self.height-2*i,
-                                               color_rgb(255, 0, 0))    
     def setup(self):
         # Backlight aktivieren
         self.backlight = Pin(21, Pin.OUT)
         self.backlight.on()  # Backlight einschalten
-        ''' Draw shutdown icon and bind callback to it '''
-        a = 5    # Move the icon
-        b = 190	 # Move the icon
-        self.screen.fill_circle(300 - a, 220 - b, 18, color565(0, 0, 0))
-        self.screen.fill_circle(300 - a, 220 - b, 15, color565(255, 255, 255))
-        self.screen.fill_rectangle(295 - a, 197 - b, 10, 20, color565(255, 255, 255))
-        self.screen.fill_rectangle(298 - a, 197 - b, 4, 20, color565(0, 0, 0))
-        
-        item3 = self.TouchArea(self, 300 - a - 20, 220 - b - 20, 40, 40)
-        self.addTouchItem(item3, lambda x: self.stop())
         
     def run(self):    
         self.connect_four = ConnectFour(self.screen, self.touch)
         self.connect_four.draw_board()
         self.update_player_display()
-        
-    def stop(self):
-        print('Shutdown.')
-        self.spi_touch.deinit()
-        #self.backlightPWM.deinit()
-        
-        self.backlight.off()
-        self.screen.cleanup()
-        
-    def addTouchItem(self, item, cb):
-        self.Touch_items.append(item)
-        self.Touch_callbacks.append(cb)
-        
+
     def update_player_display(self):
         """Aktualisiert die Anzeige, welcher Spieler am Zug ist."""
         self.screen.fill_rectangle(0, 0, 320, 20, color_rgb(255, 255, 255))  # Hintergrund löschen
@@ -171,10 +125,7 @@ class TouchScreen:
             # Spalte basierend auf der X-Koordinate berechnen (da das Display rotiert ist)
             col = (y - self.connect_four.offset_x) // self.connect_four.cell_height
             print(f"Calculated column: {col}")
-            if len(self.Touch_items) > 0:
-                for i, item in enumerate(self.Touch_items):
-                    if y in item.TouchX and x in item.TouchY:
-                        self.Touch_callbacks[i](i)
+            
             if 0 <= col < 7:  # Nur gültige Spalten
                 if self.connect_four.drop_piece(col):
                     self.connect_four.draw_board()
@@ -185,9 +136,20 @@ class TouchScreen:
                         self.connect_four.switch_player()
                         self.update_player_display()
 
-                
 class fourWinnerGame(pndIFGame):
     def gameRuntime(self):
         return TouchScreen()
+    
+    def setUp(self) ->str:
+        self.Game = self.gameRuntime()
+        self.Game.setup()
+        return "setup Done"
+    def run(self) ->str:
+        self.Game.run()
+        return "Game started"
 
 
+##    touch_screen = TouchScreen()
+##    while True:
+##        time.sleep(1)
+    
