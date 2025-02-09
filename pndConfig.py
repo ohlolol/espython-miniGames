@@ -2,15 +2,11 @@ gc_name = "pndESP_DEV_Game"
 
 class tasks:
     gc_tasks = "Game"
-    ## gc_sensors = {0:{"name":"DS18X20_1", "type":"DS18X20","pin": 4, "ADC": False},
-   ##               1:{"name":"DHT11_2", "type":"DHT11","pin": 27, "ADC": False},
-   ##               2:{"name":"DHT11_3", "type":"DHT11","pin": 28, "ADC": False},
-    ##              3:{"name":"Moisture_1", "type":"MOIST","pin": 0, "ADC": True},
-   ##              4:{"name":"Moisture_2", "type":"MOIST","pin": 33, "ADC": True},
-   ##               5:{"name":"Moisture_3", "type":"MOIST","pin": 35, "ADC": True}
-    ##              }
-    ##gc_display = { "sdaPin":6, "sclPin":7, "type": "SSD1306_I2C", "name": "myDisp", "widht":128, "height": 64}
-
+    gc_touch = {"spi": 2, "sck": 25, "mosi": 32, "miso": 39, "baud": 10000000, "cs": 33, "intPin": 36}
+    gc_display = {"spi":1, "sck":14, "mosi":13, "baud":10000000, "dc":2, "cs":15, "rst":15, "width":320, "height":240, "bgr":False, "gamma":True, "rotation":270, "backlight":21}
+    gc_games = {0:{"name":"4-Gewinnt", "source":"4winner", "plugins":{}},
+                1:{"name":"Nummer-Raten", "source":"guess_number", "plugins":{}}}
+    
 class defaults:
     gc_battery = True
     gc_adc_min = 1024

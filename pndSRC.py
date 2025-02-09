@@ -7,7 +7,31 @@ import socket
 import gc
 import sys
 import ujson
+import json
 from machine import Pin, I2C, ADC
+
+class storage():
+    def __init__(self):
+        self.file = "data.pnd"
+        self.str = ""
+        self.obj = {}
+    
+    def read(self):
+        r = open(self.file)
+        self.obj = json.loads(r.read())
+        return self.obj
+        
+    def write(self, obj):
+        self.str = json.dumps(obj, separators=None)
+        f = open(self.file, "w" )
+        f.write(self.str)
+        f.close()
+        
+    def cx(self, cx):
+        mystr = json.dumps(cx, separators=None)
+        f = open("cx.pnd", "w" )
+        f.write(mystr)
+        f.close()
 
 class dtime():
     def __init__(self):
@@ -290,9 +314,13 @@ class pndIFGame:
         pass
     
     def setUp(self) ->str:
-        self.Game = self.gameRuntime("Game - 1")
+        self.Game = self.gameRuntime()
         self.Game.setup()
         return "setup Done"
     def run(self) ->str:
         self.Game.run()
         return "Game started"
+    def stop(self) ->str:
+        self.Game.stop()
+        return "Game Stopped"
+

@@ -1,42 +1,45 @@
-"""ILI9341 XPT2046 touch demo for cheap yellow display."""
+## Pundo:
+## implementation for the menu
+## and gameloader
+##
+## Changes:
+## 09.02.25: Creation
+
 from ili9341 import Display, color565
 from xpt2046 import Touch
-from machine import Pin, SPI, PWM 
+from machine import Pin, SPI, PWM
+from pndConfig import tasks as cfg # get Configuration
+import sys # needed to load modules in runtime
 import time
     
     
 def color_rgb(r, g, b):
     return color565(r, g, b)
 
-'''
-TouchScreen (0, 0) = corner diagonal to usb port 
-'''
 
 class TouchScreen(object):
-    """Touchscreen simple demo."""
-    CYAN = color_rgb(0, 255, 255)
-    PURPLE = color_rgb(255, 0, 255)
-    WHITE = color_rgb(255, 0, 0)
+
     
-    def __init__(self):
+    def __init__(self, rtCB): # pass callback to runtime and set as globals
+        self.rtCB = rtCB
         self.mark_touch = False # True, False --> Show touch coordinates
         self.Touch_items = []
         self.Touch_callbacks = []
         
-        self.spi_display = SPI(1, baudrate=10000000,
-                        sck=Pin(14), mosi=Pin(13))
+        self.spi_display = SPI(cfg.gc_display['spi'], baudrate=cfg.gc_display['baud'],
+                        sck=Pin(cfg.gc_display['sck']), mosi=Pin(cfg.gc_display['mosi']))# use displayconfig from cfg
         
-        self.Screen = Display(self.spi_display, dc=Pin(2), cs=Pin(15),
-                              rst=Pin(15), width = 320, height = 240,
-                              bgr = False, gamma = True, rotation = 270)
+        self.Screen = Display(self.spi_display, dc=Pin(cfg.gc_display['dc']), cs=Pin(cfg.gc_display['cs']),
+                              rst=Pin(cfg.gc_display['rst']), width = cfg.gc_display['width'], height = cfg.gc_display['height'],
+                              bgr = cfg.gc_display['bgr'], gamma = cfg.gc_display['gamma'], rotation = cfg.gc_display['rotation'])
         
-        self.backlight = Pin(21, Pin.OUT)
+        self.backlight = Pin(cfg.gc_display['backlight'], Pin.OUT)
         self.backlight.on()
         
-        self.spi_touch = SPI(2, baudrate=1000000, sck=Pin(25),
-                        mosi=Pin(32), miso=Pin(39))
+        self.spi_touch = SPI(cfg.gc_touch['spi'], baudrate=cfg.gc_touch['baud'], sck=Pin(cfg.gc_touch['sck']),
+                        mosi=Pin(cfg.gc_touch['mosi']), miso=Pin(cfg.gc_touch['miso']))
 
-        self.Touch = Touch(self.spi_touch, cs=Pin(33), int_pin=Pin(36),
+        self.Touch = Touch(self.spi_touch, cs=Pin(cfg.gc_touch['cs']), int_pin=Pin(cfg.gc_touch['intPin']),
                            int_handler=self.touchscreen_press)
         
         self.Screen.clear(color565(255,255,255))
@@ -49,21 +52,21 @@ class TouchScreen(object):
     
     def draw(self):
         ''' Draw text and assign a callback to touch event at rectangular area '''
-        
-        text = 'Touch Area 1'
-        self.Screen.draw_text8x8(108, 108, text,
-                                 color565(0, 0, 0), color565(255, 255, 255))
-        item = self.TouchArea(self, 100, 100, 15 + 8 * len(text), 20, True)
-        self.addTouchItem(item, lambda x: print('Area 1'))
-        
-        
-        text = 'Touch Area 2'
-        self.Screen.draw_text8x8(168, 168, text,
-                                 color565(0, 0, 0), color565(255, 255, 255))
-        item2 = self.TouchArea(self, 160, 160, 15 + 8 * len(text), 20, True)
-        self.addTouchItem(item2, lambda x: print('Area 2'))
-        
-        
+        left = 25
+        top = 25
+        i = 0
+        items = []
+        for game in cfg.gc_games:
+            
+            text = cfg.gc_games[game]['name']
+            self.Screen.draw_text8x8(left, top, text,
+                                 color565(0, 0, 255), color565(255, 255, 255))
+            items.append(self.TouchArea(self, (left-1), (top-2), 15 + 8 * len(text), 20, True))
+            self.addTouchItem(items[i], cfg.gc_games[game])
+            top += 25
+            
+            i += 1
+
         ''' Draw shutdown icon and bind callback to it '''
         a = 5    # Move the icon
         b = 190	 # Move the icon
@@ -75,7 +78,27 @@ class TouchScreen(object):
         item3 = self.TouchArea(self, 300 - a - 20, 220 - b - 20, 40, 40)
         self.addTouchItem(item3, lambda x: self.shutdown())
         
-        
+    def loadGame(self, game):
+        src = game['source']
+        oGame = self.load_module(src)
+        this = self
+        lGame = oGame.pndGame()
+        rtGame = lGame.gameRuntime(this)
+        rtGame.setup()
+        rtGame.run()
+        print('loadGame: ' + game['name'])
+        pass
+    
+    def load_module(self, module):
+
+    # module_path = "mypackage.%s" % module
+        module_path = module
+
+        if module_path in sys.modules:
+            return sys.modules[module_path]
+
+        return __import__(module_path, module)
+
     def addTouchItem(self, item, cb):
         self.Touch_items.append(item)
         self.Touch_callbacks.append(cb)
@@ -92,7 +115,7 @@ class TouchScreen(object):
     def touchscreen_press(self, x, y):
         """Process touchscreen press events."""
         x, y = y, x
-        
+        print(f"Touch coordinates: x={x}, y={y}")
         if self.mark_touch:
             self.Screen.fill_circle(x, y, 4, color_rgb(155, 155, 155))
             self.Screen.draw_circle(x, y, 4, color_rgb(255, 255, 255))
@@ -101,7 +124,9 @@ class TouchScreen(object):
         if len(self.Touch_items) > 0:
             for i, item in enumerate(self.Touch_items):
                 if x in item.TouchX and y in item.TouchY:
-                    self.Touch_callbacks[i](i)
+                    self.loadGame(self.Touch_callbacks[i])
+ 
+ 
                     
     class TouchArea:
         ''' Bind callback to rectangular touch area'''
@@ -129,7 +154,8 @@ class TouchScreen(object):
 
 
 try:
-    x = TouchScreen()
+    rtObject = object()
+    x = TouchScreen(rtObject)
     
     while True:
         time.sleep(1)
