@@ -14,15 +14,5 @@ class defaults:
     gc_ntp_host = "time.pundoria.de"
     gc_looping = 1
 
-class wifi:
-    gc_ssid = "Schnell2.4"
-    gc_secret = "llenhcS1!"
-    
-class mqtt:
-    gc_host = "mq.pundoria.de"
-    gc_port = 1883
-    gc_topic_config ="pndpg/"+ gc_name +"/config"
-    gc_topic_sensor ="pndpg/"+ gc_name +"/sensors"
-    gc_user = "pndiot"
-    gc_secret = "illi123"
+
     
