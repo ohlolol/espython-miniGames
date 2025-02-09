@@ -2,7 +2,7 @@ gc_name = "pndESP_DEV_Game"
 
 class tasks:
     gc_tasks = "Game"
-    gc_touch = {"spi": 2, "sck": 25, "mosi": 32, "miso": 39, "baud": 10000000, "cs": 33, "intPin": 36}
+    gc_touch = {"spi": 2, "sck": 25, "mosi": 32, "miso": 39, "baud": 1000000, "cs": 33, "intPin": 36}
     gc_display = {"spi":1, "sck":14, "mosi":13, "baud":10000000, "dc":2, "cs":15, "rst":15, "width":320, "height":240, "bgr":False, "gamma":True, "rotation":270, "backlight":21}
     gc_games = {0:{"name":"4-Gewinnt", "source":"4winner", "plugins":{}},
                 1:{"name":"Nummer-Raten", "source":"guess_number", "plugins":{}}}

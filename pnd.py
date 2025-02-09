@@ -29,7 +29,7 @@ class rt():
                 machine.idle()
                 print(self.Psystem.status())
                 
-                x = TouchScreen(self)
+                x = menu.TouchScreen(self)
                 self.Running = True
                 while (self.Running == True):
                     time.sleep(1)
@@ -64,9 +64,9 @@ class rt():
                     else:
                         self.Sensors[i] = mypnd.sens(cfg.tasks.gc_sensors[sens]['name'],cfg.tasks.gc_sensors[sens]['type'],cfg.tasks.gc_sensors[sens]['pin'])
                     i += 1
-            if hasattr(cfg.tasks, "gc_display"):
-                self.dispService = dispService();
-            if cfg.defaults.gc_battery:
+            #if hasattr(cfg.tasks, "gc_display"):
+                #self.dispService = dispService(); ## needs new implementation for CYD
+            if hasattr(cfg.defaults, "gc_battery"):
                 self.looping = (cfg.defaults.gc_looping * 1000) * 60
                 self.data = self.storage.read()
                 if(machine.reset_cause() == 4):

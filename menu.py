@@ -22,7 +22,7 @@ class TouchScreen(object):
     
     def __init__(self, rtCB): # pass callback to runtime and set as globals
         self.rtCB = rtCB
-        self.mark_touch = False # True, False --> Show touch coordinates
+        self.mark_touch = True # True, False --> Show touch coordinates
         self.Touch_items = []
         self.Touch_callbacks = []
         
@@ -44,6 +44,7 @@ class TouchScreen(object):
         
         self.Screen.clear(color565(255,255,255))
         
+        
         #self.backlightPWM = PWM(self.backlight, freq=5000, duty_u16=32768)
         
         # Assign touch callbacks and draw elements on screen
@@ -61,7 +62,7 @@ class TouchScreen(object):
             text = cfg.gc_games[game]['name']
             self.Screen.draw_text8x8(left, top, text,
                                  color565(0, 0, 255), color565(255, 255, 255))
-            items.append(self.TouchArea(self, (left-1), (top-2), 15 + 8 * len(text), 20, True))
+            items.append(self.TouchArea(self, (left-2), (top-2), 15 + 8 * len(text), 20, True))
             self.addTouchItem(items[i], cfg.gc_games[game])
             top += 25
             
@@ -76,9 +77,13 @@ class TouchScreen(object):
         self.Screen.fill_rectangle(298 - a, 197 - b, 4, 20, color565(0, 0, 0))
         
         item3 = self.TouchArea(self, 300 - a - 20, 220 - b - 20, 40, 40)
-        self.addTouchItem(item3, lambda x: self.shutdown())
+        restart = {"name":"restart"}
+        self.addTouchItem(item3, restart)
         
     def loadGame(self, game):
+        if game['name'] == "restart":
+            self.shutdown()
+            return True;
         src = game['source']
         oGame = self.load_module(src)
         this = self
@@ -110,12 +115,14 @@ class TouchScreen(object):
         
         self.backlight.off()
         self.Screen.cleanup()
+        self.rtCB.Running = False
         sys.exit(0)
         
     def touchscreen_press(self, x, y):
         """Process touchscreen press events."""
         x, y = y, x
-        print(f"Touch coordinates: x={x}, y={y}")
+        
+
         if self.mark_touch:
             self.Screen.fill_circle(x, y, 4, color_rgb(155, 155, 155))
             self.Screen.draw_circle(x, y, 4, color_rgb(255, 255, 255))
@@ -151,17 +158,4 @@ class TouchScreen(object):
                 self.parent.Screen.draw_rectangle(self.x+i, self.y+i,
                                                self.width-2*i, self.height-2*i,
                                                color_rgb(255, 0, 0))        
-
-
-try:
-    rtObject = object()
-    x = TouchScreen(rtObject)
-    
-    while True:
-        time.sleep(1)
-
-except KeyboardInterrupt:
-    print("\nCtrl-C pressed.  Cleaning up and exiting...")
-#finally:
-    x.shutdown()
         

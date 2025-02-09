@@ -91,7 +91,11 @@ class TouchScreen(object):
         
     def touchscreen_press(self, x, y):
         """Process touchscreen press events."""
+        print(x)
+        print(y)
         x, y = y, x
+        print(x)
+        print(y)
         
         if self.mark_touch:
             self.Screen.fill_circle(x, y, 4, color_rgb(155, 155, 155))

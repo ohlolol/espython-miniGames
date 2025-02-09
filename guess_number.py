@@ -12,6 +12,10 @@ from machine import Pin, SPI, PWM
 ## import array
 import array
 
+## import machine
+import machine
+
+
 ## import Cpnfiguration
 from pndConfig import tasks as cfg # get Configuration
 
@@ -51,7 +55,7 @@ class Game:
                               rst=Pin(cfg.gc_display['rst']), width = cfg.gc_display['width'], height = cfg.gc_display['height'],
                               bgr = cfg.gc_display['bgr'], gamma = cfg.gc_display['gamma'], rotation = cfg.gc_display['rotation'])
         
-        ## tunr backlight on
+        ## turn backlight on
         self.backlight = Pin(cfg.gc_display['backlight'], Pin.OUT)
         self.backlight.on()
         
@@ -189,7 +193,8 @@ class Game:
         self.Screen.fill_rectangle(298 - a, 197 - b, 4, 20, color565(0, 0, 0))
         
         item3 = self.TouchArea(self, 300 - a - 20, 220 - b - 20, 40, 40)
-        self.addTouchItem(item3, lambda x: self.stop())
+        oStop = myNumb(69)
+        self.addTouchItem(item3, oStop)
     # --------------------------------------------------
     # G A M E P L A Y   M E C H A N I C S
     # --------------------------------------------------
@@ -280,19 +285,22 @@ class Game:
         
     def touchscreen_press(self, x, y):
         """Verarbeitet Touch-Eingaben."""
-        y =  y +1
+        x, y = y, x
         if not self.gameOver:
             # Debug: Touch-Koordinaten anzeigen
             print(f"Touch coordinates: x={x}, y={y}")
             
             if len(self.Touch_items) > 0:
                 for i, item in enumerate(self.Touch_items):
-                    if y in item.TouchX and x in item.TouchY:
+                    if x in item.TouchX and y in item.TouchY:
                         if self.Touch_callbacks[i].numb == 99:
                             print("ok pressed")
                             print(item.TouchX)
                             print(item.TouchY)
                             self.check_number()
+                            
+                        elif self.Touch_callbacks[i].numb == 69: ## end game
+                            self.stop()
                         else:
                             self.add_numbers(self.Touch_callbacks[i].numb)
                         
@@ -334,7 +342,8 @@ class Game:
         print('Shutdown.')
         self.spi_touch.deinit() # touch off       
         self.backlight.off() # light off
-        self.screen.cleanup() # clear screen
+        self.Screen.cleanup() # clear screen
+        machine.reset()
 
 
 

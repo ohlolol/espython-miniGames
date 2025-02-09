@@ -145,53 +145,16 @@ class system():
         memfree = gc.mem_free() / 1024
         memusage = gc.mem_alloc() / 1024
         mem = memfree + memusage
-        if(self.cb.cfg.defaults.gc_battery):
-            loop = self.cb.looping / 1000
-            loop = loop / 60
-            uptimeS = 01
-            self.cb.data["uptimeM"] = self.cb.cycle * loop
-            self.cb.data["uptimeH"] = self.cb.data["uptimeM"] / 60
-            self.cb.data["uptimeD"] = self.cb.data["uptimeH"] / 24
-        
-        else:
-            uptimeS = self.cb.cycle * self.cb.looping
-            self.cb.data["uptimeM"] = uptimeS / 60
-            self.cb.data["uptimeH"] = self.cb.data["uptimeM"] / 60
-            self.cb.data["uptimeD"] = self.cb.data["uptimeH"] / 24
-        print("tiefer")
         system = "System:\nDevice: "+ cfg.gc_name + "\nSystem: " + sys.platform + "\nFirmware: " + sys.version 
         system += "\n\nRessources:\nCPU Speed: " + "{:.0f}".format(cpufq) + "MHz"
         system += "\nMEM All: " + "{:.2f}".format(mem) + "Kb"
         system += "\nMEM Free: " + "{:.2f}".format(memfree) + "Kb"
         system += "\nMEM Used: " + "{:.2f}".format(memusage) + "Kb"
-        system += "\nSYS Uptime: "+ str(self.cb.data["uptimeD"] ) + ":" + str(self.cb.data["uptimeH"] ) + ":" + str(self.cb.data["uptimeM"] ) + ":" + str(uptimeS)
-        system += "\nSYS MQTT Message Count: " + "{:.0f}".format(self.cb.cycle) + "Messages"
         return system
 
     def statusJSON(self):
-
-        cpufq = machine.freq() / 1000000
-        memfree = gc.mem_free() / 1024
-        memusage = gc.mem_alloc() / 1024
-        mem = memfree + memusage
-        if(self.cb.cfg.defaults.gc_battery):
-            loop = self.cb.looping / 1000
-            loop = loop / 60
-            uptimeS = 01
-            self.cb.data["uptimeM"] = self.cb.cycle * loop
-            self.cb.data["uptimeH"] = self.cb.data["uptimeM"] / 60
-            self.cb.data["uptimeD"] = self.cb.data["uptimeH"] / 24
+        pass
         
-        else:
-            uptimeS = self.cb.cycle * self.cb.looping
-            self.cb.data["uptimeM"] = uptimeS / 60
-            self.cb.data["uptimeH"] = self.cb.data["uptimeM"] / 60
-            self.cb.data["uptimeD"] = self.cb.data["uptimeH"] / 24
-            
-        jsSys = ujson.dumps({ "ip": self.cb.wifi.getIp(), "name": cfg.gc_name, "mqtt_msg_count": self.cb.cycle, "uptime_min" : self.cb.data["uptimeM"], "uptime_days" : "{:.2f}".format(self.cb.data["uptimeD"]),
-                              "uptime_hr" : "{:.2f}".format(self.cb.data["uptimeH"]), "memory" : "{:.2f}".format(mem), "mem_free" : "{:.2f}".format(memfree), "mem_usage" : "{:.2f}".format(memusage) })
-        return jsSys
-    
     def getUptimeM(self):
         timeDiff = time.time()-self.timeInit  
         (minutes, seconds) = divmod(timeDiff, 60)  
@@ -256,8 +219,9 @@ class webserver():
         print(get)
         response = ""
         if(get == 6):
-            s = Psystem.status()
-            final = s.replace("\n", "<br>")
+            s = system()
+            stat = system.status()
+            final = stat.replace("\n", "<br>")
             response += '<html><head><title>Pundo Web Server</title></head><body><h1>Pundo Web Server</h1><p><strong>' + final + '</strong></p></body></html>'
             print("bin 2")
             conn.send('HTTP/1.1 200 OK\n')

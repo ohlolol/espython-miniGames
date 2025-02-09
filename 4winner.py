@@ -2,6 +2,7 @@ from ili9341 import Display, color565
 from xpt2046 import Touch
 from machine import Pin, SPI
 from pndSRC import pndIFGame
+import machine
 import time
 
 def color_rgb(r, g, b):
@@ -90,7 +91,8 @@ class ConnectFour:
 
 class TouchScreen:
     
-    def __init__(self):
+    def __init__(self, rtCB):
+        self.rtCB = rtCB
         self.spi_display = SPI(1, baudrate=10000000, sck=Pin(14), mosi=Pin(13))
         self.screen = Display(self.spi_display, dc=Pin(2), cs=Pin(15), rst=Pin(15), width=320, height=240, rotation=270)
         self.spi_touch = SPI(2, baudrate=1000000, sck=Pin(25), mosi=Pin(32), miso=Pin(39))
@@ -147,6 +149,8 @@ class TouchScreen:
         
         self.backlight.off()
         self.screen.cleanup()
+        self.rtCB.Running = False
+        machine.reset()
         
     def addTouchItem(self, item, cb):
         self.Touch_items.append(item)
@@ -164,6 +168,11 @@ class TouchScreen:
 
     def touchscreen_press(self, x, y):
         """Verarbeitet Touch-Eingaben."""
+        if len(self.Touch_items) > 0:
+            for i, item in enumerate(self.Touch_items):
+                if y in item.TouchX and x in item.TouchY:
+                    self.Touch_callbacks[i](i)
+                    
         if not self.connect_four.game_over:
             # Debug: Touch-Koordinaten anzeigen
             print(f"Touch coordinates: x={x}, y={y}")
@@ -190,5 +199,5 @@ class pndGame(pndIFGame):
     name = "4-winner"
     def gameRuntime(self, rtCB):
         self.rtCB = rtCB
-        return TouchScreen()
+        return TouchScreen(rtCB)
 
