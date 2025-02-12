@@ -13,7 +13,8 @@ import menu
 class rt():
     
     storage = mypnd.storage()
-    wifi = mypnd.wifi()
+    if cfg.defaults.gc_wifi:
+        wifi = mypnd.wifi()
     Psystem = mypnd.system()
     lastTry = 0
     cycle = 0
@@ -38,24 +39,29 @@ class rt():
 
     def backgroundTask(self):
 
-        lhttp = mypnd.webserver()
-        print('starting Webserver...')
+        if cfg.defaults.gc_bTask:
+            lhttp = mypnd.webserver()
+            print('starting Webserver...')
         
-        ## method with main loop goes here
-        lhttp.showStatusPage()
+            ## method with main loop goes here
+            lhttp.showStatusPage()
+        else:
+            print('background Task is disabled by config')
 
     def init(self, lastTry):
         try:
             self.Psystem.setCallback(self)
+            self.cycle = 1
             i = 0
             self.lastTry = lastTry
-            self.wifi.connect()
-            ntptime.host = cfg.defaults.gc_ntp_host
-            self.cycle = 1
-            try:
-                ntptime.settime()
-            except:
-                pass
+            if cfg.defaults.gc_wifi:
+                self.wifi.connect()
+                ntptime.host = cfg.defaults.gc_ntp_host
+            
+                try:
+                    ntptime.settime()
+                except:
+                    pass
             if hasattr(cfg.tasks, "gc_sensors"):
                 self.Sensors = {}
                 for sens in cfg.tasks.gc_sensors:
@@ -66,7 +72,7 @@ class rt():
                     i += 1
             #if hasattr(cfg.tasks, "gc_display"):
                 #self.dispService = dispService(); ## needs new implementation for CYD
-            if hasattr(cfg.defaults, "gc_battery"):
+            if cfg.defaults.gc_battery:
                 self.looping = (cfg.defaults.gc_looping * 1000) * 60
                 self.data = self.storage.read()
                 if(machine.reset_cause() == 4):
