@@ -6,6 +6,8 @@ import machine
 import time
 import random
 
+from pndConfig import tasks as cfg # get Configuration
+
 def color_rgb(r, g, b):
     return color565(r, g, b)
 
@@ -112,14 +114,25 @@ class SnakeGame:
 class TouchScreen:
     def __init__(self, rtCB):
         self.rtCB = rtCB
-        self.spi_display = SPI(1, baudrate=10000000, sck=Pin(14), mosi=Pin(13))
-        self.screen = Display(self.spi_display, dc=Pin(2), cs=Pin(15), rst=Pin(15), width=320, height=240, rotation=270)
-        self.spi_touch = SPI(2, baudrate=1000000, sck=Pin(25), mosi=Pin(32), miso=Pin(39))
-        self.touch = Touch(self.spi_touch, cs=Pin(33), int_pin=Pin(36), int_handler=self.touchscreen_press)
+        self.spi_display = SPI(cfg.gc_display['spi'], baudrate=cfg.gc_display['baud'],
+                            sck=Pin(cfg.gc_display['sck']), mosi=Pin(cfg.gc_display['mosi']))# use displayconfig from cfg
+        
+        self.screen = Display(self.spi_display, dc=Pin(cfg.gc_display['dc']), cs=Pin(cfg.gc_display['cs']),
+                              rst=Pin(cfg.gc_display['rst']), width = cfg.gc_display['width'], height = cfg.gc_display['height'],
+                              bgr = cfg.gc_display['bgr'], gamma = cfg.gc_display['gamma'], rotation = cfg.gc_display['rotation'])
+        
+        self.backlight = Pin(cfg.gc_display['backlight'], Pin.OUT)
+
+        
+        self.spi_touch = SPI(cfg.gc_touch['spi'], baudrate=cfg.gc_touch['baud'], sck=Pin(cfg.gc_touch['sck']),
+                        mosi=Pin(cfg.gc_touch['mosi']), miso=Pin(cfg.gc_touch['miso']))
+
+        self.touch = Touch(self.spi_touch, cs=Pin(cfg.gc_touch['cs']), int_pin=Pin(cfg.gc_touch['intPin']),
+                           int_handler=self.touchscreen_press)
         self.Touch_items = []
         self.Touch_callbacks = []
-        self.snake_game = None  # Initialisiere snake_game als None
-        self.game_started = False  # Spiel startet erst nach Berührung
+        self.snake_game = None
+        self.game_started = False
 
     class TouchArea:
         def __init__(self, parent, x, y, w, h, draw=False):
@@ -149,35 +162,35 @@ class TouchScreen:
 
         # Links
         self.addTouchItem(self.TouchArea(self, button_offset_x, button_offset_y + button_size, button_size, button_size, draw=True),
-                          lambda x: self.start_game_and_set_direction(-1, 0))
+                          {"direction": (-1, 0)})
         self.screen.draw_text8x8(button_offset_x + 5, button_offset_y + button_size + 5, "<", color_rgb(255, 255, 255), color_rgb(100, 100, 100))
 
         # Rechts
         self.addTouchItem(self.TouchArea(self, button_offset_x + button_size, button_offset_y + button_size, button_size, button_size, draw=True),
-                          lambda x: self.start_game_and_set_direction(1, 0))
+                          {"direction": (1, 0)})
         self.screen.draw_text8x8(button_offset_x + button_size + 5, button_offset_y + button_size + 5, ">", color_rgb(255, 255, 255), color_rgb(100, 100, 100))
 
         # Oben
         self.addTouchItem(self.TouchArea(self, button_offset_x + button_size // 2, button_offset_y, button_size, button_size, draw=True),
-                          lambda x: self.start_game_and_set_direction(0, -1))
+                          {"direction": (0, -1)})
         self.screen.draw_text8x8(button_offset_x + button_size // 2 + 5, button_offset_y + 5, "^", color_rgb(255, 255, 255), color_rgb(100, 100, 100))
 
         # Unten
         self.addTouchItem(self.TouchArea(self, button_offset_x + button_size // 2, button_offset_y + 2 * button_size, button_size, button_size, draw=True),
-                          lambda x: self.start_game_and_set_direction(0, 1))
+                          {"direction": (0, 1)})
         self.screen.draw_text8x8(button_offset_x + button_size // 2 + 5, button_offset_y + 2 * button_size + 5, "v", color_rgb(255, 255, 255), color_rgb(100, 100, 100))
 
-    def start_game_and_set_direction(self, dx, dy):
+    def handle_direction_input(self, direction):
         if not self.game_started:
             self.game_started = True
             self.snake_game.game_started = True
-        self.snake_game.set_direction(dx, dy)
+        self.snake_game.set_direction(direction[0], direction[1])
 
     def run(self):
-        self.snake_game = SnakeGame(self.screen, self.touch)  # Initialisiere snake_game hier
+        self.snake_game = SnakeGame(self.screen, self.touch)
         self.snake_game.draw_board()
         self.snake_game.draw_score()
-        self.draw_control_pad()  # Zeichne das Steuerkreuz nach der Initialisierung von snake_game
+        self.draw_control_pad()
 
         # Warte auf Spielstart (Berührung einer Pfeiltaste)
         while not self.game_started:
@@ -201,11 +214,13 @@ class TouchScreen:
         self.Touch_callbacks.append(cb)
 
     def touchscreen_press(self, x, y):
-        x, y = y, x
+        x, y = y, x  # Tausche X und Y Koordinaten
         if len(self.Touch_items) > 0:
             for i, item in enumerate(self.Touch_items):
                 if x in item.TouchX and y in item.TouchY:
-                    self.Touch_callbacks[i](i)
+                    direction = self.Touch_callbacks[i].get("direction")
+                    if direction:
+                        self.handle_direction_input(direction)
 
 class pndGame(pndIFGame):
     name = "Snake"

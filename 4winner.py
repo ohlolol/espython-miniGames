@@ -4,6 +4,7 @@ from machine import Pin, SPI
 from pndSRC import pndIFGame
 import machine
 import time
+from pndConfig import tasks as cfg # get Configuration
 
 def color_rgb(r, g, b):
     return color565(r, g, b)
@@ -93,10 +94,21 @@ class TouchScreen:
     
     def __init__(self, rtCB):
         self.rtCB = rtCB
-        self.spi_display = SPI(1, baudrate=10000000, sck=Pin(14), mosi=Pin(13))
-        self.screen = Display(self.spi_display, dc=Pin(2), cs=Pin(15), rst=Pin(15), width=320, height=240, rotation=270)
-        self.spi_touch = SPI(2, baudrate=1000000, sck=Pin(25), mosi=Pin(32), miso=Pin(39))
-        self.touch = Touch(self.spi_touch, cs=Pin(33), int_pin=Pin(36), int_handler=self.touchscreen_press)
+        self.spi_display = SPI(cfg.gc_display['spi'], baudrate=cfg.gc_display['baud'],
+                        sck=Pin(cfg.gc_display['sck']), mosi=Pin(cfg.gc_display['mosi']))# use displayconfig from cfg
+        
+        self.screen = Display(self.spi_display, dc=Pin(cfg.gc_display['dc']), cs=Pin(cfg.gc_display['cs']),
+                              rst=Pin(cfg.gc_display['rst']), width = cfg.gc_display['width'], height = cfg.gc_display['height'],
+                              bgr = cfg.gc_display['bgr'], gamma = cfg.gc_display['gamma'], rotation = cfg.gc_display['rotation'])
+        
+        self.backlight = Pin(cfg.gc_display['backlight'], Pin.OUT)
+
+        
+        self.spi_touch = SPI(cfg.gc_touch['spi'], baudrate=cfg.gc_touch['baud'], sck=Pin(cfg.gc_touch['sck']),
+                        mosi=Pin(cfg.gc_touch['mosi']), miso=Pin(cfg.gc_touch['miso']))
+
+        self.touch = Touch(self.spi_touch, cs=Pin(cfg.gc_touch['cs']), int_pin=Pin(cfg.gc_touch['intPin']),
+                           int_handler=self.touchscreen_press)
         self.Touch_items = []
         self.Touch_callbacks = []
     class TouchArea:
@@ -124,7 +136,6 @@ class TouchScreen:
                                                color_rgb(255, 0, 0))    
     def setup(self):
         # Backlight aktivieren
-        self.backlight = Pin(21, Pin.OUT)
         self.backlight.on()  # Backlight einschalten
         ''' Draw shutdown icon and bind callback to it '''
         a = 5    # Move the icon
