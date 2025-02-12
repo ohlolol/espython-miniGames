@@ -15,6 +15,8 @@ import array
 ## import machine
 import machine
 
+## import time
+import time
 
 ## import Cpnfiguration
 from pndConfig import tasks as cfg # get Configuration
@@ -239,16 +241,26 @@ class Game:
             
             # math
             if uInput < 1 or uInput > 100:
-                self.update_message("Bitte gib eine Zahl zwischen 1 und 100 ein")            
+                #self.update_message("Bitte gib eine Zahl zwischen 1 und 100 ein")
+                ## Ohlolol: message to long, we try shorter string
+                self.update_message("only 1-100 alowed")
             elif uInput < self.rng:
-                self.update_message("Die gesuchte Zahl ist groesser als deine")
+                #self.update_message("Die gesuchte Zahl ist groesser als deine")
+                ## Ohlolol: message to long, we try shorter string
+                self.update_message("the number is bigger")
             elif uInput > self.rng:
-                self.update_message("Die gesuchte Zahl ist kleiner als deine")
+                #self.update_message("Die gesuchte Zahl ist kleiner als deine")
+                ## Ohlolol: message to long, we try shorter string
+                self.update_message("the number is smaler")
             else:
-                self.update_message("Du hast die gesuchte Zahl erraten!")
+                #self.update_message("Du hast die gesuchte Zahl erraten!")
+                ## Ohlolol: message to long, we try shorter string
+                self.update_message("number found, you win!")
             
             
             
+            ## Ohlolol: we need to reset the input
+            self.userInput = ""
             
         except ValueError:
                 self.update_message("Gib eine gueltige Zahl ein")
@@ -260,10 +272,13 @@ class Game:
         
         # clear output screen
         self.Screen.fill_rectangle(10, 75, 300, 20, color565(255, 255, 255))
-        self.Screen.fill_rectangle(10, 75, 300, 20, color565(0, 0, 0))
+        #self.Screen.fill_rectangle(10, 75, 300, 20, color565(0, 0, 0))
+        #text = "TEST"
+        #time.sleep(1)
         # draw message
         self.Screen.draw_text8x8(25, 75, text,
                                  color565(32, 32, 32), color565(255, 255, 255)) ## RGB: another Grey
+        #time.sleep(1)
         
 # --------------------------------------------------
 # P R O C E S S   L O G I C
@@ -294,9 +309,9 @@ class Game:
                 for i, item in enumerate(self.Touch_items):
                     if x in item.TouchX and y in item.TouchY:
                         if self.Touch_callbacks[i].numb == 99:
-                            print("ok pressed")
-                            print(item.TouchX)
-                            print(item.TouchY)
+                            #print("ok pressed")
+                            #print(item.TouchX)
+                            #print(item.TouchY)
                             self.check_number()
                             
                         elif self.Touch_callbacks[i].numb == 69: ## end game
@@ -356,6 +371,8 @@ class pndGame(pndIFGame):
     
     
 ## Ohlolol: little helpers
+    
+    # object to hold a given number
 class myNumb():
     def __init__(self, numb):
         self.numb = int(numb)
